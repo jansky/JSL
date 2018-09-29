@@ -284,5 +284,100 @@ You can use this to implement a squaring function:
     65536.000000
     256.000000
 
+If you want to discard the top-most item on the stack, use the `pop` operation.
+
+    > 3
+    3.000000
+    > pop
+    > 
+
+### Lists
+
+JSL includes an implementation of lists which closely resembles that of functional languages like Lisp or OCaml. First, you start with the empty list:
+
+    > <>
+    <>
+
+Then, you can add elements onto the list using the `::`, or cons operator. This adds the object on the top of the stack to a list, and returns a new list. Lists are immutable in JSL.
+
+    > <> 3 ::
+    <...>
+    > 4 ::
+    <...>
+
+To get at elements within the list, we can use the split operation. This returns the first element of the list (the head) on the top of the stack, and a new list containing the remaining elements (the tail) below the head:
+
+    > <> 3 :: 4 :: split
+    4.000000
+    <...>
+    > pop split
+    3.000000
+    <>
+
+Trying to split the empty list will generate an error:
+
+    > <> split
+    Error: Unable to split an empty list.
+
+You can use the `empty?` operator to determine if a list is empty:
+
+    > <> empty?
+    true
+
+    > <> 3 :: empty?
+    false
+
+Here are a couple common list operations implemented in JSL. The first procedure reverses a list. The second function returns a new list containing the result of a procedure run on each of the input list elements:
+
+    {
+        {
+            'acc asn
+            'list asn
+
+            { acc } list empty? if
+            {
+                list split
+                'head asn
+                'tail asn
+
+                tail acc head :: rev_tr!
+            } list empty? ~ if
+        } 'rev_tr asn
+
+        <> rev_tr
+    } 'rev asn
+
+    {
+        {
+            'acc asn
+            'list asn
+            'func asn
+
+            { acc rev! } list empty? if
+            {
+
+                list split
+                'head asn
+                'tail asn
+
+                func tail acc head func! :: map_tr!
+
+            } list empty? ~ if
+        } 'map_tr asn
+
+        <> map_tr!
+    } 'map asn
+
+Here's an example using `map` to double each element within a list:
+
+    > { 2 * } <> 3 :: 4 :: map!
+    <...>
+    > split
+    8.000000
+    <...>
+    > pop split
+    6.000000
+    <>
+
 
 

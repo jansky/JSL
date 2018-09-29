@@ -10,7 +10,7 @@ import (
 type itemType int
 
 const eof = -1
-const identifierRunes = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_"
+const identifierRunes = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_?"
 
 const (
 	itemError itemType = iota
@@ -31,6 +31,8 @@ const (
 	itemAt
 	itemNot
 	itemCondition
+	itemEmptyList
+	itemCons
 )
 
 type item struct {
@@ -72,6 +74,10 @@ func (item *item) print() {
 		itemTypeString = "itemTimes"
 	case itemDividedBy:
 		itemTypeString = "itemDividedBy"
+	case itemEmptyList:
+		itemTypeString = "itemEmptyList"
+	case itemCons:
+		itemTypeString = "itemCons"
 	}
 
 	if printValue {
@@ -269,7 +275,27 @@ func lexCode(l *lexer) stateFn {
 	case r == '=':
 		l.emit(itemCondition)
 		return lexCode
-	case r == '<' || r == '>':
+	case r == ':':
+		if l.next() != ':' {
+			return l.errorf("Unexpected ':' at position %d", l.start)
+		}
+
+		l.emit(itemCons)
+		return lexCode
+	case r == '<':
+		if l.next() == '>' {
+			l.emit(itemEmptyList)
+			return lexCode
+		}
+
+		l.backup()
+		if l.next() != '=' {
+			l.backup()
+		}
+
+		l.emit(itemCondition)
+		return lexCode
+	case r == '>':
 		if l.next() != '=' {
 			l.backup()
 		}

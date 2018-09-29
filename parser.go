@@ -57,6 +57,12 @@ func parseIdentifier(i item) langObject {
 			return &langObjectOperation{operationTypeIf,}
 		case i.val == "for":
 			return &langObjectOperation{operationTypeFor,}
+		case i.val == "empty?":
+			return &langObjectOperation{operationTypeListEmpty,}
+		case i.val == "split":
+			return &langObjectOperation{operationTypeListSplit,}
+		case i.val == "pop":
+			return &langObjectOperation{operationTypePop,}
 		default:
 			return &langObjectIdentifier{identifierDefault, i.val,}
 		}
@@ -136,6 +142,10 @@ func parseCodeBlock(p *parser) (*langObjectCodeBlock, error) {
 			default:
 				return &langObjectCodeBlock{}, fmt.Errorf("Unknown condition type '%s'.", i.val)
 			}
+		case i.typ == itemEmptyList:
+			codeBlockItems = append(codeBlockItems, &langObjectList{true, nil, nil,})
+		case i.typ == itemCons:
+			codeBlockItems = append(codeBlockItems, &langObjectOperation{operationTypeCons,})
 		default:
 			return &langObjectCodeBlock{}, fmt.Errorf("Unknown lexer item type.")
 		}

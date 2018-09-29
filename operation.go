@@ -500,7 +500,7 @@ func performOperation(typ operationType, s *stack, v *variableScope, st *symbolT
 			}
 
 			if boolObj.getType() != objectTypeBoolean {
-				return errors.New("Expect, but did not get a boolean.")
+				return errors.New("Expected, but did not get a boolean.")
 			}
 
 			if boolObj.(*langObjectBoolean).val == false {
@@ -534,6 +534,66 @@ func performOperation(typ operationType, s *stack, v *variableScope, st *symbolT
 		}
 
 		st.cleanUp()
+	case operationTypeListEmpty:
+		list, err1 := s.pop()
+
+		if err1 != nil {
+			return err1
+		}
+
+		if list.getType() != objectTypeList {
+			return errors.New("Expected, but did not get a list.")
+		}
+
+		s.push(&langObjectBoolean{list.(*langObjectList).empty,})
+	case operationTypeCons:
+
+		value, err1 := s.pop()
+
+		if err1 != nil {
+			return err1
+		}
+
+		list, err2 := s.pop()
+
+		if err2 != nil {
+			return err2
+		}
+
+		if list.getType() != objectTypeList {
+			return errors.New("Expected, but did not get an object and a list.")
+		}
+
+		s.push(&langObjectList{
+			false,
+			value,
+			list.copy().(*langObjectList),
+		})
+	case operationTypeListSplit:
+
+		list, err1 := s.pop()
+
+		if err1 != nil {
+			return err1
+		}
+
+		if list.getType() != objectTypeList {
+			return errors.New("Expected, but did not get a list.")
+		}
+
+		if list.(*langObjectList).empty {
+			return errors.New("Unable to split an empty list.")
+		}
+
+		s.push(list.(*langObjectList).tail.copy())
+		s.push(list.(*langObjectList).head)
+	case operationTypePop:
+
+		_, err1 := s.pop()
+
+		if err1 != nil {
+			return err1
+		}
 	}
 
 	

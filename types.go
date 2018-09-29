@@ -15,6 +15,7 @@ const (
 	objectTypeCodeBlock
 	objectTypeIdentifier
 	objectTypeReference
+	objectTypeList
 	objectTypeError
 )
 
@@ -257,6 +258,10 @@ const (
 	operationTypeIf
 	operationTypeFor
 	operationTypeDuplicate
+	operationTypeCons
+	operationTypeListEmpty
+	operationTypeListSplit
+	operationTypePop
 )
 
 type langObjectOperation struct {
@@ -315,6 +320,14 @@ func(l *langObjectOperation) toString() string {
 		operationName = "for"
 	case operationTypeDuplicate:
 		operationName = "duplicate"
+	case operationTypeCons:
+		operationName = "cons"
+	case operationTypeListEmpty:
+		operationName = "empty?"
+	case operationTypeListSplit:
+		operationName = "split"
+	case operationTypePop:
+		operationName = "pop"
 	}
 
 	return fmt.Sprintf("<Operation: %s>", operationName)
@@ -555,3 +568,65 @@ func (l *langObjectError) greaterThan(o langObject) (bool, error) {
 func (l *langObjectError) lessThan(o langObject) (bool, error) {
 	return false, errors.New("Operation less than cannot be applied to error.")
 }
+
+/* Lists */
+
+type langObjectList struct {
+	empty bool
+	head langObject
+	tail *langObjectList
+}
+
+func (l *langObjectList) getType() langObjectType {
+	return objectTypeList
+}
+
+func (l *langObjectList) getValue() interface{} {
+	return l
+}
+
+func (l *langObjectList) setValue(list interface{}) {
+	l = list.(*langObjectList)
+}
+
+func (l *langObjectList) toString() string {
+	if l.empty {
+		return "<>"
+	} else {
+		return "<...>"
+	}
+}
+
+func (l *langObjectList) copy() langObject {
+
+	var head_copied langObject
+	tail_copied := &langObjectList{}
+
+	if l.tail != nil {
+		tail_copied = l.tail.copy().(*langObjectList)
+	}
+
+	if l.head != nil {
+		head_copied = l.head.copy()
+	}
+
+	return &langObjectList{
+		l.empty,
+		head_copied,
+		tail_copied,
+	}
+
+}
+
+func (l *langObjectList) equals(obj langObject) (bool, error) {
+	return false, errors.New("Operation equals cannot be applied to list.")
+}
+
+func (l *langObjectList) greaterThan(obj langObject) (bool, error) {
+	return false, errors.New("Operation greater than cannot be applied to list.")
+}
+
+func (l *langObjectList) lessThan(obj langObject) (bool, error) {
+	return false, errors.New("Operation less than cannot be applied to list.")
+}
+

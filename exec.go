@@ -59,6 +59,12 @@ func (l *langObjectCodeBlock) exec(s *stack, v *variableScope, st *symbolTable, 
 		switch {
 		case o.getType() == objectTypeNumber|| o.getType() == objectTypeString || o.getType() == objectTypeBoolean:
 			s.push(o)
+		case o.getType() == objectTypeList:
+			if o.(*langObjectList).empty {
+				s.push(o)
+			} else {
+				s.push(o.copy())
+			}
 		case o.getType() == objectTypeCodeBlock:
 			codeBlock := o.(*langObjectCodeBlock)
 
