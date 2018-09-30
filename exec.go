@@ -4,19 +4,19 @@ import (
 	"fmt"
 )
 
-func handleIdentifier(s *stack, v *variableScope, st *symbolTable, ident *langObjectIdentifier) error {
+func handleIdentifier(v *variableScope, st *symbolTable, ident *langObjectIdentifier) (langObject, error) {
 	stKey, ok := v.get(ident.name)
 
 	switch ident.typ {
 	case identifierDefault:
 		if ok == false {
-			return fmt.Errorf("Variable '%s' undefined in the local scope.", ident.name)
+			return nil, fmt.Errorf("Variable '%s' undefined in the local scope.", ident.name)
 		}
 
 		obj, stOk := st.retrieve(stKey)			
 
 		if stOk == false {
-			return fmt.Errorf("Unable to retrieve object with ID %X from the symbol table.", stKey)
+			return nil, fmt.Errorf("Unable to retrieve object with ID %X from the symbol table.", stKey)
 		}
 
 		/* Whenever we push a reference onto the stack, we must handle garbage collection */
@@ -24,27 +24,30 @@ func handleIdentifier(s *stack, v *variableScope, st *symbolTable, ident *langOb
 			stErr := st.incReference(obj.(*langObjectReference).key)
 
 			if stErr != nil {
-				return fmt.Errorf("Unable to retrieve object with ID %X from the symbol table.", stKey)
+				return nil, fmt.Errorf("Unable to retrieve object with ID %X from the symbol table.", stKey)
 			}
 		}
 
-		s.push(obj.copy())
+		//s.push(obj.copy())
+		return obj.copy(), nil
 	case identifierReference:
 
 		if ok == true {
 			stErr := st.incReference(stKey)
 
 			if stErr != nil {
-				return stErr
+				return nil, stErr
 			}
 
-			s.push(&langObjectReference{stKey,})
+			//s.push(&langObjectReference{stKey,})
+			return &langObjectReference{stKey,}, nil
 		} else {
-			s.push(ident)
+			//s.push(ident)
+			return ident, nil
 		}		
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (l *langObjectCodeBlock) exec(s *stack, v *variableScope, st *symbolTable, cleanUpLocal bool) error {
@@ -74,13 +77,21 @@ func (l *langObjectCodeBlock) exec(s *stack, v *variableScope, st *symbolTable, 
 				codeBlock.parentScope = v
 			}
 
+			handleErr := o.(*langObjectCodeBlock).handleParentVariables(st)
+
+			if handleErr != nil {
+				return handleErr
+			}
+
 			s.push(o)
 		case o.getType() == objectTypeIdentifier:
-			identErr := handleIdentifier(s, v, st, o.(*langObjectIdentifier))
+			identifier, identErr := handleIdentifier(v, st, o.(*langObjectIdentifier))
 
 			if identErr != nil {
 				return identErr
 			}
+
+			s.push(identifier)
 		case o.getType() == objectTypeOperation:
 			err := performOperation(o.getValue().(operationType), s, v, st)
 

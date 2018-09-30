@@ -135,6 +135,40 @@ Code blocks can also be nested. Each nested code block has its own variable scop
     > { 3.14 'pi asn { pi 2 * 'two_pi asn}! two_pi }!
     Error: Variable 'two_pi' undefined in the local scope.
 
+JSL supports closures. Here is an example of a [Church encoding](https://en.wikipedia.org/wiki/Church_encoding#Church_pairs) of [Cons cells](https://en.wikipedia.org/wiki/Cons):
+
+    {
+        'y asn
+        'x asn
+
+        {
+            'm asn
+            x y m!
+        }
+    } 'cons asn
+
+    {
+        'pair asn
+        { pop } pair!
+    } 'car asn
+
+    {
+        'pair asn
+        {
+            'y asn
+            pop
+            y
+        } pair!
+    } 'cdr asn
+
+    > 3 4 cons!
+    <CodeBlock>
+    > car!
+    3.000000
+
+    > 3 4 cons! cdr!
+    4.000000
+
 ### Control Flow
 
 JSL has a boolean type that results from comparisons.

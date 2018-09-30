@@ -415,6 +415,51 @@ func (l *langObjectCodeBlock) lessThan(o langObject) (bool, error) {
 	return false, errors.New("Code block objects are not comparable.")
 }
 
+func (l *langObjectCodeBlock) handleParentVariables(st *symbolTable) error {
+
+	for _, obj := range l.code {
+
+		if obj.getType() == objectTypeIdentifier {
+
+			stKey, ok := l.parentScope.get(obj.(*langObjectIdentifier).name)
+
+			if ok {
+				/* This means we've reached an identifier that is defined within the parent scope.
+				   We don't raise an error if ok is false because we trust that the variable will
+				   be defined before use in the local scope when the code block is executed. */
+			
+				stErr := st.incReference(stKey)
+
+				if stErr != nil {
+					return stErr
+				}
+
+				if obj.(*langObjectIdentifier).typ == identifierDefault {
+					value, stOk := st.retrieve(stKey)		
+
+					if stOk == false {
+						return fmt.Errorf("Unable to retrieve object with ID %X from the symbol table.", stKey)
+					}
+
+					/* If we have a reference in the parent scope, then handle garbage collection */
+					if value.getType() == objectTypeReference {
+						stErr := st.incReference(value.(*langObjectReference).key)
+
+						if stErr != nil {
+							return fmt.Errorf("Unable to retrieve object with ID %X from the symbol table.", stKey)
+						}
+					}
+				}
+			}
+
+		}
+
+	}
+
+	return nil
+
+}
+
 /* Identifier */
 
 type identifierType int
