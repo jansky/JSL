@@ -50,10 +50,10 @@ Variables can be assigned to using `asn`.
     > pi
     3.140000
 
-The single quote that prefixes the variable name `pi` indicates that it should be treated as a reference. If a variable with the name `pi` does not exist within the current scope, then the variable name is pushed to the stack as a *name reference*.
+The single quote that prefixes the variable name `pi` indicates that it should be treated as a reference. If a variable with the name `pi` does not exist within the current scope, then the variable name is pushed to the stack as a *identifier reference*.
 
     > 'pi
-    'pi
+    .pi
 
 However, if a variable `pi` does exist, then a *variable reference* to that variable will be placed onto the stack.
 
@@ -61,12 +61,22 @@ However, if a variable `pi` does exist, then a *variable reference* to that vari
     > 'pi
     <Reference: 4D65822107FCFD52>
 
-Here, `4D65822107FCFD52` is the unique ID that the variable `pi` has on the global symbol table. References function somewhat like pointers in C. We can use the `@` operator to dereference a reference.
+Here, `4D65822107FCFD52` is the unique ID that the variable `pi` has on the global symbol table. It is possible to explicitly push an identifier reference onto the stack:
+
+    > 3.14 'pi asn
+    > 'pi
+    <Reference: 4D65822107FCFD52>
+    > .pi
+    .pi
+
+Explicit identifier references should not be used when assigning values to variables. Rather, they can be used for various other purposes, such as constructing enumerations (you could define the days of the week as `.Mon`, `.Tues`, `.Wed`, etc.), or for returning errors. A procedure performing a lookup, for example, could push `.None` onto the stack if the lookup fails. 
+
+Variable references function somewhat like pointers in C. We can use the `@` operator to dereference a variable reference.
 
     > 'pi@
     3.140000
 
-Assigning to a variable requires either a name reference or a variable reference.
+Assigning to a variable requires either an identifier reference or a variable reference.
 
     > 3.14 'pi asn
     > pi     
