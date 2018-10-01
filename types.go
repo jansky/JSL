@@ -262,6 +262,7 @@ const (
 	operationTypeListEmpty
 	operationTypeListSplit
 	operationTypePop
+	operationTypeInclude
 )
 
 type langObjectOperation struct {
@@ -328,6 +329,8 @@ func(l *langObjectOperation) toString() string {
 		operationName = "split"
 	case operationTypePop:
 		operationName = "pop"
+	case operationTypeInclude:
+		operationName = "include"
 	}
 
 	return fmt.Sprintf("<Operation: %s>", operationName)
@@ -469,6 +472,7 @@ const (
 	identifierReference
 	identifierReferenceAt
 	identifierCall
+	identifierName
 )
 
 type langObjectIdentifier struct {
@@ -493,7 +497,7 @@ func (l *langObjectIdentifier) toString() string {
 
 	switch l.typ {
 	case identifierReference:
-		prefix = "'"
+		prefix = "."
 	case identifierReferenceAt:
 		prefix = "@"
 	case identifierCall:

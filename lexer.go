@@ -16,6 +16,7 @@ const (
 	itemError itemType = iota
 	itemEOF
 	itemIdentifier
+	itemIdentifierName
 	itemIdentifierReference
 	itemIdentifierReferenceAt
 	itemIdentifierCall
@@ -175,6 +176,8 @@ func lexIdentifier(l *lexer) stateFn {
 		identifierType = itemIdentifierCall
 	case prefix == '@':
 		identifierType = itemIdentifierReferenceAt
+	case prefix == '.':
+		identifierType = itemIdentifierName
 	}
 
 	if identifierType == itemIdentifier {
@@ -218,6 +221,11 @@ func lexQuotedString(l *lexer) stateFn {
 	escape_sequence := false
 
 	for c := l.next(); c != '"' || escape_sequence; c = l.next() {
+
+		if c == eof {
+			return l.errorf("Unexpected end of file.")
+		}
+
 		if c == '\\' {
 			escape_sequence = true
 		} else {
@@ -232,6 +240,31 @@ func lexQuotedString(l *lexer) stateFn {
 	l.ignore() // We don't want the end quote
 
 	return lexCode
+}
+
+func lexComment(l *lexer) stateFn {
+
+	for true {
+		c := l.next()
+
+		if c == eof {
+			return l.errorf("Unexpected end of file.")
+		}
+
+		if c == '*' {
+			switch l.next() {
+			case eof:
+				return l.errorf("Unexpected end of file.")
+			case ')':
+				return lexCode
+			default:
+				// Continue in the comment
+			}
+		}
+	}
+
+	return lexCode
+
 }
 
 func lexCode(l *lexer) stateFn {
@@ -311,6 +344,9 @@ func lexCode(l *lexer) stateFn {
 	case strings.IndexRune(identifierRunes, r) >= 0:
 		l.backup()
 		return lexIdentifier
+	case r == '.':
+		l.backup()
+		return lexIdentifier
 	case r == '\'':
 		l.backup()
 		return lexIdentifier
@@ -322,6 +358,12 @@ func lexCode(l *lexer) stateFn {
 
 		l.emit(itemExecute)
 		return lexCode
+	case r == '(':
+		if l.next() != '*' {
+			return l.errorf("Unexpected '(' at position %d", l.start)
+		}
+
+		return lexComment
 	default:
 		return l.errorf("Unexpected %q at position %d", r, l.start)
 	}

@@ -21,39 +21,22 @@ func main() {
 
 		fmt.Print("> ")
 
-		scanner.Scan()
+		if !scanner.Scan() {
+			fmt.Print("\n")
+			os.Exit(0)
+		}
 
 		input := scanner.Text()
 
 		if input == "exit" || input == "quit" {
 			os.Exit(0)
 		}
-	
-		_, items := lex("test", input)
 
-		main, err := parseCodeBlock(&parser{items, 0,})
+		err := evalString(input, programStack, programVariableScope, programSymbolTable, true)
 
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error())
-			continue
-		}
-
-		//main.print(0)
-
-		execErr := main.exec(programStack, programVariableScope, programSymbolTable, false)
-
-		if execErr != nil {
-			fmt.Printf("Error: %s\n", execErr.Error())
-			continue
-		}
-
-		/*stackObject, peekError := programStack.peek()
-
-		if peekError == nil {
-			fmt.Printf("%s\n", stackObject.toString())
-		}*/
-
-		programStack.print()
+			printExecError(err)
+		}		
 		
 	}
 }

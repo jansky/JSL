@@ -23,6 +23,25 @@ JSL can function as a glorified interpreter
 
 JSL only has one numeric type, representing both integers and floating point numbers.
 
+### Comments
+
+Anything appearing between `(*` and `*)` is a comment. Comments may span multiple lines, but they may not be nested.
+
+    3 4 + (* This is a valid comment *)
+
+    (*
+
+    This multiline comment is valid too.
+
+    *)
+
+    ( * This comment is not valid. The parentheses and asterixes must be
+        located right next to each other. * )
+    
+    (* Comments may not be
+       (* nested, like this *)
+    *)
+
 ### Variables
 
 Variables can be assigned to using `asn`.
@@ -412,6 +431,28 @@ Here's an example using `map` to double each element within a list:
     > pop split
     6.000000
     <>
+
+### File Inclusion
+
+You can load a file containing JSL source code using the `include` operator. Variables in the source file will be defined in the current scope.
+
+    examples/test.jsl:
+    3 4 +
+    {
+        dup *
+    } 'square asn
+    
+    > "examples/test.jsl" include
+    7.000000
+    > square!
+    49.000000
+
+    > { "examples/test.jsl" include square! }!
+    49.000000
+    > square!
+    Error: Variable 'square' undefined in the local scope.
+
+Some example JSL code can be found within the `example/` directory.
 
 
 

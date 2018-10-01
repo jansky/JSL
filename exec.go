@@ -4,7 +4,43 @@ import (
 	"fmt"
 )
 
+func evalString(s string, programStack *stack, programVariableScope *variableScope, programSymbolTable *symbolTable, printStack bool) error {
+	_, items := lex("test", s)
+
+	main, err := parseCodeBlock(&parser{items, 0,})
+
+	if err != nil {
+		return err
+	}
+
+	execErr := main.exec(programStack, programVariableScope, programSymbolTable, false)
+
+	if execErr != nil {
+		return execErr
+	}
+
+	if printStack {
+		programStack.print()
+	}
+
+	return nil
+}
+
+func printExecError(err error) {
+	fmt.Printf("Error: %s\n", err.Error())
+}
+
 func handleIdentifier(v *variableScope, st *symbolTable, ident *langObjectIdentifier) (langObject, error) {
+
+	if ident.typ == identifierName {
+
+		return &langObjectIdentifier{
+			identifierReference,
+			ident.name,
+		}, nil
+
+	}
+
 	stKey, ok := v.get(ident.name)
 
 	switch ident.typ {
@@ -44,7 +80,7 @@ func handleIdentifier(v *variableScope, st *symbolTable, ident *langObjectIdenti
 		} else {
 			//s.push(ident)
 			return ident, nil
-		}		
+		}
 	}
 
 	return nil, nil

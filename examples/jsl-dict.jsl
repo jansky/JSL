@@ -1,0 +1,199 @@
+(*
+
+This file contains an implementation of:
+
+    * Cons cells
+    * Binary tree data type
+    * Tree-based dictionary that uses cons cells to associate keys and values
+
+Include this file, and then use the procedure dictionary_test to test it. You
+should see the strings
+
+    "Ian is 18.000000 years old."
+    "John is 21.000000 years old."
+
+placed onto the stack.
+
+*)
+
+{
+    'y asn
+    'x asn
+
+    {
+        'm asn
+        x y m!
+    }
+} 'cons asn
+
+{
+    'pair asn
+    { pop } pair!
+} 'car asn
+
+{
+    'pair asn
+    {
+        'y asn
+        pop
+        y
+    } pair!
+} 'cdr asn
+
+(*
+
+Here we use a technique similar to the one we used for Cons cells to implement a
+binary tree structure. A tree can either be a leaf, or a branch containing one
+element and a right and left subtree. We can use the procedures
+
+    leaf?
+    get_element
+    get_left
+    get_right
+
+to safely get at each of these elements of the tree structure without worrying
+about the internal implementation.
+
+*)
+
+{
+    {
+        'm asn
+        true m!
+    }
+} 'leaf asn
+
+{
+    'e asn
+    'right asn
+    'left asn
+
+    {
+       'm asn
+       right left e false m!
+    }
+} 'branch asn
+
+{
+    'tree asn
+    {
+        'is_leaf asn
+
+        { true } is_leaf if 
+        {
+            pop pop pop
+            false
+        } is_leaf ~ if
+    } tree!
+} 'leaf? asn
+
+{
+    'tree asn
+    {
+        pop
+        'e asn
+        pop pop
+        e
+    } tree!
+} 'get_element asn
+
+{
+    'tree asn
+    {
+        pop
+        pop
+        'left asn
+        pop
+        left
+    } tree!
+} 'get_left asn
+
+{
+    'tree asn
+    {
+        pop pop pop
+    } tree!
+} 'get_right asn
+
+(*
+
+Here we implement a dictionary using the tree data type that we just defined. It
+supports keys of any type that is comparable using =, <, and >. 
+
+*)
+
+leaf! 'empty_dictionary asn
+
+{
+    'tree asn
+    'value asn
+    'key asn
+
+    {
+        leaf! leaf! key value cons! branch!
+    } tree leaf?! if
+    {
+        tree get_element! 'e asn
+        tree get_left! 'left asn
+        tree get_right! 'right asn
+
+        {
+            left right key value cons! branch!
+        } key e car! = if
+
+        {
+            left key value right insert! e branch!
+        } key e car! > if
+
+        {
+            key value left insert! right e branch!
+        } key e car! < if
+    } tree leaf?! ~ if
+} 'insert asn
+
+{
+    'tree asn
+    'key asn
+
+    {
+        .None (* We signal an error using a literal identifier *)
+    } tree leaf?! if
+    {
+        tree get_element! 'e asn
+        
+        {
+            e cdr!
+        } key e car! = if
+
+        {
+            key tree get_left! retrieve!
+        } key e car! < if
+
+        {
+            key tree get_right! retrieve!
+        } key e car! > if
+    } tree leaf?! ~ if
+} 'retrieve asn
+
+(*
+
+You can use this procedure to test our dictionary implementation. It should
+place:
+
+    "Ian is 18.000000 years old."
+    "John is 21.000000 years old."
+
+onto the stack.
+
+*)
+
+{
+
+    empty_dictionary 'dict asn
+    "Ian" 18 dict insert! 'dict asn (* Dictionaries are immutable *)
+    "John" 21 dict insert! 'dict asn
+
+    "John is " "John" dict retrieve! + " years old." +
+    "Ian is " "Ian" dict retrieve! + " years old." +
+
+} 'dictionary_test asn

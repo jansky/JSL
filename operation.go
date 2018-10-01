@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"bufio"
 )
 
 func evaluateCondition(typ operationType, s *stack, v *variableScope, st *symbolTable) error {
@@ -594,6 +596,39 @@ func performOperation(typ operationType, s *stack, v *variableScope, st *symbolT
 		if err1 != nil {
 			return err1
 		}
+	case operationTypeInclude:
+
+		filePath, err1 := s.pop()
+
+		if err1 != nil {
+			return err1
+		}
+
+		if filePath.getType() != objectTypeString {
+			return errors.New("Expected, but did not get a string.")
+		}
+
+		includeFile, err2 := os.Open(filePath.(*langObjectString).val)
+
+		if err2 != nil {
+			return err2
+		}
+
+		fileScanner := bufio.NewScanner(includeFile)
+
+		includeFileContents := ""
+
+		for fileScanner.Scan() {
+			includeFileContents += fileScanner.Text() + " "
+		}
+
+		err3 := evalString(includeFileContents, s, v, st, false)
+
+		if err3 != nil {
+			return err3
+		}
+
+		includeFile.Close()
 	}
 
 	

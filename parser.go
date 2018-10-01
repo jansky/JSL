@@ -27,7 +27,7 @@ func parseString(str string) string {
 
 func parseIdentifier(i item) langObject {
 	
-	if i.typ == itemIdentifierReference || i.typ == itemIdentifierReferenceAt || i.typ == itemIdentifierCall {
+	if i.typ == itemIdentifierReference || i.typ == itemIdentifierReferenceAt || i.typ == itemIdentifierCall  || i.typ == itemIdentifierName {
 		identifierTyp := identifierReference
 
 		if i.typ == itemIdentifierReferenceAt {
@@ -36,6 +36,10 @@ func parseIdentifier(i item) langObject {
 
 		if i.typ == itemIdentifierCall {
 			identifierTyp = identifierCall
+		}
+
+		if i.typ == itemIdentifierName {
+			identifierTyp = identifierName
 		}
 
 		return &langObjectIdentifier{identifierTyp, i.val,}
@@ -63,6 +67,8 @@ func parseIdentifier(i item) langObject {
 			return &langObjectOperation{operationTypeListSplit,}
 		case i.val == "pop":
 			return &langObjectOperation{operationTypePop,}
+		case i.val == "include":
+			return &langObjectOperation{operationTypeInclude,}
 		default:
 			return &langObjectIdentifier{identifierDefault, i.val,}
 		}
@@ -125,7 +131,7 @@ func parseCodeBlock(p *parser) (*langObjectCodeBlock, error) {
 			codeBlockItems = append(codeBlockItems, &langObjectOperation{operationTypeAt,})
 		case i.typ == itemNot:
 			codeBlockItems = append(codeBlockItems, &langObjectOperation{operationTypeNot,})
-		case i.typ == itemIdentifier || i.typ == itemIdentifierReference || i.typ == itemIdentifierReferenceAt || i.typ == itemIdentifierCall:
+		case i.typ == itemIdentifier || i.typ == itemIdentifierReference || i.typ == itemIdentifierReferenceAt || i.typ == itemIdentifierCall || i.typ == itemIdentifierName:
 			codeBlockItems = append(codeBlockItems, parseIdentifier(i))
 		case i.typ == itemCondition:
 			switch i.val {
